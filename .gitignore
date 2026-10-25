@@ -1,0 +1,35 @@
+﻿# Runtime database
+db_data/
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+
+# Build intermediate directories
+**/vc14/
+**/build/
+*.obj
+*.o
+*.pch
+*.ipch
+*.sdf
+*.VC.db
+*.pdb
+
+# Redundant zip downloads and packs
+pokedashpota1.02_release/pack_mapper/
+pokedashpota1.02_release/pokedashpota1.02_site/downloads/
+pokedashpota1.02_release/ObjectBuilder_edited/
+pokedashpota1.02_release/item editor 10.98 32 bits/
+
+# Logs
+*.log
+
+# IDE & OS
+.vs/
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+
+pokedashpota1.02_release/pokedashpota1.02_client/pokedash_linux64
