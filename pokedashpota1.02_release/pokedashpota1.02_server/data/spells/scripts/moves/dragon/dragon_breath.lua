@@ -1,9 +1,9 @@
 local time = 50
 local area = {}
-table.insert(area, createCombatArea(AREA_DRAGONWAVE)) --dir1
-table.insert(area, createCombatArea(AREA_DRAGONWAVE)) --dir2
-table.insert(area, createCombatArea(AREA_DRAGONWAVE)) --dir3
-table.insert(area, createCombatArea(AREA_DRAGONWAVE)) --dir4
+table.insert(area, createCombatArea(AREA_SQUAREWAVE3)) --dir1
+table.insert(area, createCombatArea(AREA_SQUAREWAVE3)) --dir2
+table.insert(area, createCombatArea(AREA_SQUAREWAVE3)) --dir3
+table.insert(area, createCombatArea(AREA_SQUAREWAVE3)) --dir4
 
 local effects = {}
 table.insert(effects, 878) --dir1

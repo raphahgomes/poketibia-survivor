@@ -80,5 +80,7 @@
 	<talkaction words="!dungeon" separator=" " script="dungeon.lua" />
 	<talkaction words="!survivor" separator=" " script="dungeon.lua" />
 	<talkaction words="!leaderboard" script="dungeon.lua" />
+	<talkaction words="!pxg" script="dungeon.lua" />
+	<talkaction words="!kit" script="dungeon.lua" />
 </talkactions>
 

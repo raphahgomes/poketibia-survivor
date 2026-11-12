@@ -28,10 +28,10 @@ loginProtocolPort = 7171
 gameProtocolPort = 7172
 statusProtocolPort = 7171
 maxPlayers = 0
-motd = "Welcome to PokeGypt!"
-onePlayerOnlinePerAccount = true
-allowClones = false
-serverName = "PokeGypt"
+motd = "Bem-vindo ao Poketestes by Raph!"
+onePlayerOnlinePerAccount = false
+allowClones = true
+serverName = "Poketestes by Raph"
 statusTimeout = 5000
 replaceKickOnLogin = true
 maxPacketsPerSecond = 80 -- default 25
@@ -62,15 +62,14 @@ premiumToCreateMarketOffer = false
 checkExpiredMarketOffersEachMinutes = 60
 maxMarketOffersAtATimePerPlayer = 100
 
--- SQLite (default database engine for PokeGypt -- no MySQL server needed)
--- The database file is created automatically on first launch from schema_sqlite.sql
-sqliteDatabase = "pokegypt.sqlite"
+-- SQLite
+sqliteDatabase = "poketestes.sqlite"
 
--- MySQL (kept for reference / optional AAC website use -- not used by the SQLite build)
+-- MySQL / MariaDB (Banco Principal: poketestes)
 mysqlHost = "127.0.0.1"
 mysqlUser = "root"
 mysqlPass = ""
-mysqlDatabase = "pokegypt"
+mysqlDatabase = "poketestes"
 mysqlPort = 3306
 mysqlSock = ""
 passwordType = "sha1"
@@ -109,7 +108,7 @@ defaultPriority = "high"
 startupDatabaseOptimization = false
 
 -- Status server information
-ownerName = "Lord1Egypt"
-ownerEmail = ""
-url = "https://github.com/Lord1Egypt/PokeGypt"
-location = "Egypt"
+ownerName = "Raph"
+ownerEmail = "raphahgomes@gmail.com"
+url = ""
+location = "Brazil"

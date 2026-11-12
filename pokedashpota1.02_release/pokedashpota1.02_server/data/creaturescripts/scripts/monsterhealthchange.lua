@@ -1,4 +1,4 @@
-﻿local criticalProbability = 1
+local criticalProbability = 1
 local blockedProbability = 1
 local racesStrength = 
 	{
@@ -28,7 +28,7 @@ local racesStrength =
 	}
 
 local function isStrongAgainst(attackerRace, defenderRace, defenderRace2)
-
+	if not racesStrength[attackerRace] then return false end
 	if isInArray(racesStrength[attackerRace].strong, defenderRace) or isInArray(racesStrength[attackerRace].strong, defenderRace2) then
 		return true
 	end
@@ -37,7 +37,7 @@ local function isStrongAgainst(attackerRace, defenderRace, defenderRace2)
 end
 
 local function isWeakAgainst(attackerRace, defenderRace, defenderRace2)
-
+	if not racesStrength[attackerRace] then return false end
 	if isInArray(racesStrength[attackerRace].weak, defenderRace) or isInArray(racesStrength[attackerRace].weak, defenderRace2) then
 		return true
 	end
@@ -50,25 +50,97 @@ function onHealthChange(creature, attacker, primaryDamage, primaryType, secondar
 	if not attacker then
 		return primaryDamage, primaryType, secondaryDamage, secondaryType
 	end
-	-- Suporte PokeView na Dungeon
+
+	-- 1. Suporte PokeView na Dungeon: Dano do Jogador -> Monstro (Vantagem Elemental Suavizada, Clima, Critico e Lifesteal)
 	if attacker and attacker:isPlayer() and creature:isMonster() and attacker:getStorageValue(PokeDungeon.STORAGE_POKEVIEW) == 1 then
-		local atkMult = 1.0
-		if PokeDungeon.hasBuff(attacker, "ataque") then
-			atkMult = atkMult * 1.6
+		local atkMult = 2.2
+		local primaryTypeName = getCombatName(primaryType)
+		local defenderMonsterType = MonsterType(creature:getName())
+
+		if defenderMonsterType then
+			local defenderRace = defenderMonsterType:getRaceName()
+			local defenderRace2 = defenderMonsterType:getRace2Name()
+			if isStrongAgainst(primaryTypeName, defenderRace, defenderRace2) then
+				atkMult = atkMult * 1.6
+				Game.sendAnimatedText(creature:getPosition(), "SUPER!", TEXTCOLOR_ORANGE)
+			elseif isWeakAgainst(primaryTypeName, defenderRace, defenderRace2) then
+				atkMult = atkMult * 0.65
+			end
 		end
-		if primaryDamage then primaryDamage = math.floor(primaryDamage * 2.5 * atkMult) end
-		if secondaryDamage then secondaryDamage = math.floor(secondaryDamage * 2.5 * atkMult) end
+
+		-- Bônus de Clima Dinâmico (+25%)
+		local guid = attacker:getGuid()
+		local st = PokeDungeon.playerState[guid]
+		if st and st.weather and PokeDungeon.WEATHERS[st.weather] then
+			local boostTypes = PokeDungeon.WEATHERS[st.weather].boostTypes
+			if boostTypes and isInArray(boostTypes, primaryTypeName) then
+				atkMult = atkMult * 1.25
+			end
+		end
+
+		-- Chance de Dano Crítico (10% base + 8% por nível de Foco Crítico)
+		local critLvl = math.max(0, attacker:getStorageValue(PokeDungeon.STORAGE_TRAIT_CRIT))
+		local critChance = 10 + (critLvl * 8)
+		if math.random(1, 100) <= critChance then
+			atkMult = atkMult * 1.5
+			Game.sendAnimatedText(creature:getPosition(), "CRITICO!", TEXTCOLOR_RED)
+		end
+
+		if primaryDamage then primaryDamage = math.floor(primaryDamage * atkMult) end
+		if secondaryDamage then secondaryDamage = math.floor(secondaryDamage * atkMult) end
+
+		-- Held Item: Shell Bell (8% Lifesteal)
+		if PokeDungeon.hasHeldItem(attacker, "shell_bell") then
+			local totalDmg = math.abs(primaryDamage or 0) + math.abs(secondaryDamage or 0)
+			local leech = math.max(2, math.floor(totalDmg * 0.08))
+			if attacker:getHealth() < attacker:getMaxHealth() then
+				attacker:addHealth(leech)
+			end
+		end
+
 		return primaryDamage, primaryType, secondaryDamage, secondaryType
 	end
 
+	-- 2. Suporte PokeView na Dungeon: Dano do Monstro -> Jogador (Defesa, Rocky Helmet, Focus Sash e God-Mode)
 	if creature:isPlayer() and creature:getStorageValue(PokeDungeon.STORAGE_POKEVIEW) == 1 then
-		local defMult = 1.0
-		if PokeDungeon.hasBuff(creature, "defesa") then
-			defMult = 0.5
+		-- Modo Imortal GM (God-Mode)
+		if creature:getStorageValue(PokeDungeon.STORAGE_GOD_MODE) == 1 then
+			return 0, primaryType, 0, secondaryType
 		end
-		if primaryDamage then primaryDamage = math.floor(primaryDamage * 0.15 * defMult) end
-		if secondaryDamage then secondaryDamage = math.floor(secondaryDamage * 0.15 * defMult) end
-		return primaryDamage, primaryType, secondaryDamage, secondaryType
+
+		local floorNum = math.max(1, creature:getStorageValue(PokeDungeon.STORAGE_FLOOR))
+		local baseDmg = 4 + (floorNum - 1) * 7 + math.random(1, 4)
+
+		local defTrait = math.max(0, creature:getStorageValue(PokeDungeon.STORAGE_TRAIT_DEF))
+		local defMult = math.max(0.25, 1.0 - (defTrait * 0.15))
+		if PokeDungeon.hasBuff(creature, "defesa") then
+			defMult = defMult * 0.5
+		end
+
+		local finalDamage = math.max(1, math.floor(baseDmg * defMult))
+
+		-- Held Item: Rocky Helmet (Reflete dano no atacante)
+		if attacker and attacker:isMonster() and PokeDungeon.hasHeldItem(creature, "rocky_helmet") then
+			local thorns = 25 + (floorNum * 25)
+			attacker:addHealth(-math.min(attacker:getHealth() - 1, thorns))
+			attacker:getPosition():sendMagicEffect(CONST_ME_BLOCKHIT)
+		end
+
+		-- Held Item: Focus Sash (Impede morte 1x por andar)
+		local guid = creature:getGuid()
+		local st = PokeDungeon.playerState[guid]
+		if finalDamage >= creature:getHealth() and st and st.focusSashReady then
+			st.focusSashReady = false
+			local restoreHp = math.floor(creature:getMaxHealth() * 0.50)
+			creature:addHealth(restoreHp)
+			creature:getPosition():sendMagicEffect(CONST_ME_FIREWORK_YELLOW)
+			creature:getPosition():sendMagicEffect(CONST_ME_HOLYAREA)
+			Game.sendAnimatedText(creature:getPosition(), "FOCUS SASH!", TEXTCOLOR_YELLOW)
+			creature:sendTextMessage(MESSAGE_EVENT_ADVANCE, "🎗️ [FOCUS SASH] Sua Faixa de Foco impediu sua derrota e restaurou 50% de HP!")
+			return 0, primaryType, 0, secondaryType
+		end
+
+		return finalDamage, primaryType, 0, secondaryType
 	end
 
 	if creature:isPlayer() or attacker:isPlayer() then
@@ -158,4 +230,3 @@ function onHealthChange(creature, attacker, primaryDamage, primaryType, secondar
 
 	return primaryDamage, primaryType, secondaryDamage, secondaryType
 end
-

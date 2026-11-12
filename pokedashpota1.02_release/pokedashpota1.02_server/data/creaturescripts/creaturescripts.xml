@@ -20,6 +20,7 @@
 	<event type="modalwindow" name="ModalWindowHelper" script="modalwindowhelper.lua" />
 
 	<!-- PokeDungeon Survivor -->
+	<event type="modalwindow" name="PokeSurvivorModal" script="pokedungeon_modal.lua" />
 	<event type="preparedeath" name="PokeDungeonDeath" script="pokedungeon_death.lua" />
 	<event type="death" name="PokeDungeonKill" script="pokedungeon_kill.lua" />
 </creaturescripts>

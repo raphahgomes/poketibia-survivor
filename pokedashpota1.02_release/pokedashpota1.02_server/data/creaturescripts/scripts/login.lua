@@ -36,6 +36,8 @@
 	player:registerEvent("MonsterHealthChange")
 	player:registerEvent("PokeDungeonDeath")
 	player:registerEvent("PokeDungeonKill")
+	player:registerEvent("PokeSurvivorModal")
+	PokeDungeon.revertToTrainer(player)
 
 	-- Update questlog
 	player:updateQuestLog()
@@ -159,8 +161,13 @@
 --		end
 --	end
 
-	-- Announces
-	player:sendTextMessage(MESSAGE_EVENT_ADVANCE, "Welcome to Pokedash Pota v1.0")
+	-- Announces & Kit Inicial Estilo PXG + Portal PokéSurvivor no Centro Pokémon
+	PokeDungeon.givePxgStarterTeam(player, false)
+	if player:getGroup():getAccess() or player:getAccountType() >= ACCOUNT_TYPE_GAMEMASTER then
+		player:setStorageValue(PokeDungeon.STORAGE_GOD_MODE, 1)
+		player:sendTextMessage(MESSAGE_STATUS_CONSOLE_BLUE, "🛡️ [CONTA GM / SU] Invulnerabilidade ativa no Mundo Aberto e na Arena PokeSurvivor! Use !dungeon gm para abrir o Painel Sandbox.")
+	end
+	player:sendTextMessage(MESSAGE_EVENT_ADVANCE, "Bem-vindo ao Poketestes by Raph! Entre no Portal Azul ao lado no Centro Pokemon (ou digite !dungeon) para ir ao Lobby, ou use !kit para receber seu Kit Mestre Lv.100 [Boost +50]!")
 
 	return true
 end

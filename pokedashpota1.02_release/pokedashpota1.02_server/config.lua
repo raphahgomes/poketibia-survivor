@@ -28,10 +28,10 @@ loginProtocolPort = 7171
 gameProtocolPort = 7172
 statusProtocolPort = 7171
 maxPlayers = 0
-motd = "Welcome to Dash Server!"
-onePlayerOnlinePerAccount = true
-allowClones = false
-serverName = "PokeDash Pota"
+motd = "Bem-vindo ao Poketestes by Raph!"
+onePlayerOnlinePerAccount = false
+allowClones = true
+serverName = "Poketestes by Raph"
 statusTimeout = 5000
 replaceKickOnLogin = true
 maxPacketsPerSecond = 80 -- default 25
@@ -62,11 +62,11 @@ premiumToCreateMarketOffer = false
 checkExpiredMarketOffersEachMinutes = 60
 maxMarketOffersAtATimePerPlayer = 100
 
--- MySQL
+-- MySQL / MariaDB (Banco Principal: poketestes)
 mysqlHost = "127.0.0.1"
 mysqlUser = "root"
 mysqlPass = ""
-mysqlDatabase = "pokedashpota"
+mysqlDatabase = "poketestes"
 mysqlPort = 3306
 mysqlSock = ""
 passwordType = "sha1"

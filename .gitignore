@@ -21,8 +21,11 @@ pokedashpota1.02_release/pokedashpota1.02_site/downloads/
 pokedashpota1.02_release/ObjectBuilder_edited/
 pokedashpota1.02_release/item editor 10.98 32 bits/
 
-# Logs
+# Logs & Demo tapes
 *.log
+*.tape
+*.mp4
+*.gif
 
 # IDE & OS
 .vs/

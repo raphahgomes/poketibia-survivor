@@ -13,7 +13,7 @@ local function spellCallback(uid, positionDamage, damage, count)
 		if count <= hits then			
 			doAreaCombatHealth(uid, combat, positionDamage, areaDamage, -damage, -damage, 0, defenseType)
 			count = count + 1
-			addEvent(spellCallback, time, uid, tuid, positionDamage, damage, count)
+			addEvent(spellCallback, time, uid, positionDamage, damage, count)
 		end
 	end
 end

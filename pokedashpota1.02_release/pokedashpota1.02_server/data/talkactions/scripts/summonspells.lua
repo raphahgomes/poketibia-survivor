@@ -1,4 +1,4 @@
-﻿function onSay(player, words, param)
+function onSay(player, words, param)
 	local summon = player:getSummon()
 	local isPokeView = (player:getStorageValue(PokeDungeon.STORAGE_POKEVIEW) == 1)
 
@@ -15,18 +15,31 @@
 		return false
 	end
 
-	local caster = summon
-	local pokeName = ""
-	local target = nil
-
+	-- Modo PokeView (Poketestes by Raph): m1..m12 conjuram diretamente os golpes desbloqueados na Pokébar!
 	if isPokeView then
-		caster = player
-		pokeName = PokeDungeon.getPlayerPoke(player)
-		target = player:getTarget()
-	else
-		pokeName = summon:getName()
-		target = summon:getTarget()
+		local pokeName = PokeDungeon.getPlayerPoke(player)
+		local unlocked = PokeDungeon.getUnlockedMoves(player)
+		for i = 1, #moveWords do
+			if words == moveWords[i] then
+				local mInfo = unlocked[i]
+				if mInfo then
+					local aimTarget = player:getTarget()
+					if not aimTarget or aimTarget:getHealth() <= 0 then
+						aimTarget = PokeDungeon.findAimTarget(player, 7)
+					end
+					PokeDungeon.executeSurvivorMove(player, pokeName, i, mInfo, aimTarget)
+				else
+					player:sendCancelMessage("Slot de golpe ainda nao desbloqueado.")
+				end
+				break
+			end
+		end
+		return false
 	end
+
+	local caster = summon
+	local pokeName = summon:getName()
+	local target = summon:getTarget()
 
 	local monsterType = MonsterType(pokeName)
 	if not monsterType then return false end
@@ -45,27 +58,18 @@
 					player:getPosition():sendMagicEffect(CONST_ME_POFF)
 					break
 				end
-				if not isPokeView and getCreatureCondition(summon, CONDITION_SLEEP) then
+				if getCreatureCondition(summon, CONDITION_SLEEP) then
 					player:sendCancelMessage("Sorry, not possible. Your pokemon is sleeping.")
 					player:getPosition():sendMagicEffect(CONST_ME_POFF)
 					break
 				end
 
-				-- Cooldown dos Golpes (Com suporte a Buff de Cooldown de 30s)
 				local cooldown = (move[i].speed / 1000)
-				if isPokeView and PokeDungeon.hasBuff(player, "cooldown") then
-					cooldown = cooldown * 0.5
-				end
-
 				local exhausted = player:checkMoveExhaustion(i, cooldown)
 				if not exhausted then
 					local moveName = move[i].name
 					doCreatureCastSpell(caster, moveName)
-					if isPokeView then
-						player:say(moveName:upper() .. "!", TALKTYPE_MONSTER_SAY)
-					else
-						player:say(pokeName .. ", use " .. moveName .. "!", TALKTYPE_MONSTER_SAY)
-					end
+					player:say(pokeName .. ", use " .. moveName .. "!", TALKTYPE_MONSTER_SAY)
 				end
 			else
 				player:sendCancelMessage("Sorry, not possible.")

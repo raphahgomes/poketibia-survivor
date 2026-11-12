@@ -1,4 +1,4 @@
-﻿local halloweenChance = 4
+local halloweenChance = 4
 local christmasChance = 4
 local megaChance = 1
 
@@ -297,6 +297,7 @@ local christmasPokes =
 
 function Monster:onSpawn(position, startup, artificial)
 	self:registerEvent("PokeDungeonKill")
+	self:registerEvent("MonsterHealthChange")
 	if not artificial then
 		local name = self:getName()
 		local monsterType = MonsterType(name)
