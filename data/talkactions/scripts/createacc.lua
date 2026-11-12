@@ -1,4 +1,4 @@
--- PokeGypt in-game account manager (GOD only)
+-- Poketestes by Raph in-game account manager (GOD only)
 -- Usage: /createacc accountName, password
 -- Creates a new account in the SQLite database (password hashed with sha1).
 

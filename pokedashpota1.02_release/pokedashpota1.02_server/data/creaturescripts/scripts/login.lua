@@ -1,4 +1,4 @@
-﻿function onLogin(player)
+function onLogin(player)
 	local loginStr = "Bem vindo ao " .. configManager.getString(configKeys.SERVER_NAME) .. "!"
 	if player:getLastLoginSaved() <= 0 then
 		loginStr = loginStr .. " Please choose your outfit."

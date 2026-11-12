@@ -8,8 +8,8 @@ function init()
   background:lower()
 
   clientVersionLabel = background:getChildById('clientVersionLabel')
-  clientVersionLabel:setText(g_app.getName() .. ' ' .. g_app.getVersion() .. '\n' ..
-                             'Rev  ' .. g_app.getBuildRevision() .. ' ('.. g_app.getBuildCommit() .. ')\n' ..
+  clientVersionLabel:setText('Poketestes by Raph 1.0\n' ..
+                             'Engine 10.98\n' ..
                              'Built on ' .. g_app.getBuildDate() .. '\n' .. g_app.getBuildCompiler())
 
   if not g_game.isOnline() then

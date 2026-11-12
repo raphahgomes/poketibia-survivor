@@ -37,14 +37,31 @@ function onStartup()
 		result.free(resultId)
 	end
 
-	-- Provisionamento automático das contas de teste:
+	-- Garante a tabela de ranking da Dungeon
+	db.query([[
+		CREATE TABLE IF NOT EXISTS `dungeon_leaderboard` (
+			`player_id` int(11) NOT NULL,
+			`player_name` varchar(255) NOT NULL,
+			`highest_floor` int(11) NOT NULL DEFAULT '1',
+			`total_kills` int(11) NOT NULL DEFAULT '0',
+			`best_time` int(11) NOT NULL DEFAULT '0',
+			`updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+			PRIMARY KEY (`player_id`)
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+	]])
+
+	-- Remove todas as contas e personagens antigos, mantendo apenas a conta GM (su/SU) e a conta de usuário comum (survivor/Survivor)
+	db.query("DELETE FROM `players` WHERE `name` NOT IN ('SU', 'Survivor')")
+	db.query("DELETE FROM `accounts` WHERE `name` NOT IN ('su', 'survivor')")
+
+	-- Provisionamento automático das 2 contas oficiais:
 	-- 1. Conta GM/GOD: login "su" | senha "123456" | char "SU" (group_id = 3, invulnerável)
 	-- 2. Conta Normal: login "survivor" | senha "123456" | char "Survivor" (group_id = 1, jogador comum)
 	local sha1Pass = "7c4a8d09ca3762af61e59520943dc26494f8941b" -- sha1("123456")
-	db.query("INSERT IGNORE INTO `accounts` (`name`, `password`, `type`, `premdays`, `lastday`, `email`, `creation`) VALUES ('su', '" .. sha1Pass .. "', 5, 365, " .. os.time() .. ", 'su@poketibia.local', " .. os.time() .. ")")
+	db.query("INSERT IGNORE INTO `accounts` (`name`, `password`, `type`, `premdays`, `lastday`, `email`, `creation`) VALUES ('su', '" .. sha1Pass .. "', 5, 365, " .. os.time() .. ", 'su@poketestes.local', " .. os.time() .. ")")
 	db.query("UPDATE `accounts` SET `password` = '" .. sha1Pass .. "', `type` = 5, `premdays` = 365 WHERE `name` = 'su'")
 
-	db.query("INSERT IGNORE INTO `accounts` (`name`, `password`, `type`, `premdays`, `lastday`, `email`, `creation`) VALUES ('survivor', '" .. sha1Pass .. "', 1, 365, " .. os.time() .. ", 'survivor@poketibia.local', " .. os.time() .. ")")
+	db.query("INSERT IGNORE INTO `accounts` (`name`, `password`, `type`, `premdays`, `lastday`, `email`, `creation`) VALUES ('survivor', '" .. sha1Pass .. "', 1, 365, " .. os.time() .. ", 'survivor@poketestes.local', " .. os.time() .. ")")
 	db.query("UPDATE `accounts` SET `password` = '" .. sha1Pass .. "', `type` = 1, `premdays` = 365 WHERE `name` = 'survivor'")
 
 	local suAcc = db.storeQuery("SELECT `id` FROM `accounts` WHERE `name` = 'su'")

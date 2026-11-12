@@ -1,8 +1,8 @@
 Module
   name: game_pokemonmoves
   description: pokemon moves bar
-  author: drakylucas, pota
-  website: http://www.pokedashgames.com
+  author: raph
+  website: https://github.com/raphahgomes/poketibia-survivor
   autoload: true
   autoload-priority: 1000
   scripts: [ pokemonmoves ]

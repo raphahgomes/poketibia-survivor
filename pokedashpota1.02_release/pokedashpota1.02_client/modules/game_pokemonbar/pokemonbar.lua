@@ -1,4 +1,4 @@
--- bar by Pota
+-- Poketestes by Raph - Pokemon Bar
 local pokes = {}
 local pokesNumber = 6
 local OPCODE_POKEBAR = 53

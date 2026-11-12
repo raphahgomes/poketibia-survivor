@@ -1,4 +1,4 @@
--- PokeGypt SQLite schema (auto-generated from schema.sql)
+-- Poketestes by Raph SQLite schema (auto-generated from schema.sql)
 -- Structure only: a fresh database with no player data.
 PRAGMA foreign_keys = OFF;
 BEGIN TRANSACTION;

@@ -1,5 +1,8 @@
 -- this is the first file executed when the application starts
 -- we have to load the first modules form here
+if g_app.setName then
+  g_app.setName("Poketestes by Raph")
+end
 
 -- setup logger
 g_logger.setLogFile(g_resources.getWorkDir() .. g_app.getCompactName() .. ".log")

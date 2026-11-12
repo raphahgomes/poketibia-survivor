@@ -1,4 +1,4 @@
-﻿# Runtime database
+# Runtime database
 db_data/
 *.sqlite
 *.sqlite-wal

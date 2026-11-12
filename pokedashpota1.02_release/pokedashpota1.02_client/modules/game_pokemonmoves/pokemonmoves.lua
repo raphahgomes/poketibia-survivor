@@ -1,4 +1,4 @@
--- spell bar by Pota based on draky's
+-- Poketestes by Raph - Spell Bar
 local spells = {}
 local spellsNumber = 12
 local OPCODE_SKILLBAR = 52

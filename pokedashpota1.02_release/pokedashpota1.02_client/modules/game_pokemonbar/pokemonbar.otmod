@@ -1,8 +1,8 @@
 Module
   name: game_pokemonbar
   description: pokemons bar
-  author: pota
-  website: http://www.pokedashgames.com
+  author: raph
+  website: https://github.com/raphahgomes/poketibia-survivor
   autoload: true
   autoload-priority: 1000
   scripts: [ pokemonbar ]
