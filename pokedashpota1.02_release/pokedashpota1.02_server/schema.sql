@@ -754,7 +754,7 @@ CREATE TABLE `players` (
 
 LOCK TABLES `players` WRITE;
 /*!40000 ALTER TABLE `players` DISABLE KEYS */;
-INSERT INTO `players` (`id`, `name`, `group_id`, `account_id`, `level`, `vocation`, `health`, `healthmax`, `experience`, `lookbody`, `lookfeet`, `lookhead`, `looklegs`, `looktype`, `maglevel`, `mana`, `manamax`, `soul`, `town_id`, `posx`, `posy`, `posz`, `conditions`, `cap`, `sex`) VALUES (1,'SU',3,1,250,1,5000,5000,20000000,114,114,114,114,1974,0,100,100,0,1,1054,1050,7,'',4000,1),(2,'Survivor',1,2,150,1,1500,1500,5000000,114,114,114,114,1974,0,100,100,0,1,1054,1050,7,'',4000,1);
+INSERT INTO `players` (`id`, `name`, `group_id`, `account_id`, `level`, `vocation`, `health`, `healthmax`, `experience`, `lookbody`, `lookfeet`, `lookhead`, `looklegs`, `looktype`, `maglevel`, `mana`, `manamax`, `soul`, `town_id`, `posx`, `posy`, `posz`, `conditions`, `cap`, `sex`) VALUES (1,'SU',3,1,250,1,5000,5000,20000000,114,114,114,114,1974,0,100,100,0,34,1054,1050,7,'',4000,1),(2,'Survivor',1,2,150,1,1500,1500,5000000,114,114,114,114,1974,0,100,100,0,34,1054,1050,7,'',4000,1);
 /*!40000 ALTER TABLE `players` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;

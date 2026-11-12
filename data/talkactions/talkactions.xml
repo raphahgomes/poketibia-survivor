@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <talkactions>
+	<!-- PokeGypt account manager + GOD tool -->
 	<!-- Poketestes by Raph account manager + GOD tool -->
 	<talkaction words="/createacc" separator=" " script="createacc.lua" />
 	<talkaction words="/god" script="god_help.lua" />

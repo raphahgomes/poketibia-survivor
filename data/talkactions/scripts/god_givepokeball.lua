@@ -1,3 +1,4 @@
+ -- PokeGypt GOD tool: give a pokeball (with a captured pokemon) to a player
 -- Poketestes by Raph GOD tool: give a pokeball (with a captured pokemon) to a player
 -- Usage: /givepokeball playerName, pokemonName, level, boost, love
 -- (level/boost/love optional; default level 1, boost 0, love 0)

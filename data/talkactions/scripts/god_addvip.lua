@@ -1,3 +1,4 @@
+-- PokeGypt GOD tool: add VIP (premium) days
 -- Poketestes by Raph GOD tool: add VIP (premium) days
 -- Usage: /addvip playerName, days
 function onSay(player, words, param)

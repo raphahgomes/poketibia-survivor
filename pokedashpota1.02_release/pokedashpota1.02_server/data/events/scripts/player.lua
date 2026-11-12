@@ -157,6 +157,7 @@ function Player:onLookInShop(itemType, count)
 end
 
 function Player:onMoveItem(item, count, fromPosition, toPosition, fromCylinder, toCylinder)
+	if item:getActionId() == 9599 then self:sendCancelMessage("Este item faz parte do cenario oficial do Poketestes by Raph.") return false end
 	if item:getId() == 2270 or item:getId() == 2263 or item:getId() == 8922 then self:sendCancelMessage("Sorry, not possible.") return false end
 	if item:getId() == 27634 and toPosition.x ~= 65535 and self:getStorageValue(storageBike) > 0 then self:sendCancelMessage("Sorry, not possible.") return false end
 	if item:getId() == 26749 then

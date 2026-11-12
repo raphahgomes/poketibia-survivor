@@ -1,3 +1,4 @@
+-- PokeGypt GOD tool: add levels
 -- Poketestes by Raph GOD tool: add levels
 -- Usage: /addlevel playerName, levels
 local function getExpForLevel(level)

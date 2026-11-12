@@ -84,11 +84,11 @@
 	<item id="34093" article="an" name="opened door"/>
 
 
-	<item id="26821" article="a" name="dash backpack">
+	<item id="26821" article="a" name="trainer elite backpack">
 		<attribute key="containerSize" value="20" />
 		<attribute key="slotType" value="backpack" />
 	</item>
-	<item id="26760" article="a" name="pkd backpack">
+	<item id="26760" article="a" name="trainer backpack">
 		<attribute key="containerSize" value="20" />
 		<attribute key="slotType" value="backpack" />
 	</item>

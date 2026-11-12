@@ -1,3 +1,4 @@
+-- PokeGypt GOD tool: promote/demote a player's rank (group + account type)
 -- Poketestes by Raph GOD tool: promote/demote a player's rank (group + account type)
 -- Usage: /promote playerName, rank      where rank = player | tutor | gm | god
 local RANKS = {

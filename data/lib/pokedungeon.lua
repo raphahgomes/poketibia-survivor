@@ -1063,50 +1063,211 @@ function PokeDungeon.buildFloorBiome(floorNum)
     end
 end
 
+function PokeDungeon.healAtPokemonCenter(player)
+    if not player then return false end
+    player:addHealth(player:getMaxHealth())
+    local balls = player:getPokeballs()
+    if balls then
+        for _, ball in ipairs(balls) do
+            local maxHp = tonumber(ball:getSpecialAttribute("pokeMaxHealth")) or 1000
+            ball:setSpecialAttribute("pokeHealth", maxHp)
+        end
+    end
+    if type(player.refreshPokemonBar) == "function" then
+        player:refreshPokemonBar({}, {})
+    end
+    local pos = player:getPosition()
+    pos:sendMagicEffect(CONST_ME_MAGIC_GREEN)
+    pos:sendMagicEffect(CONST_ME_HEARTS)
+    Game.sendAnimatedText(pos, "CURADO!", TEXTCOLOR_LIGHTGREEN)
+    player:sendTextMessage(MESSAGE_STATUS_DEFAULT, "♪ Tin-tin-tin-tirin! ♪ Enfermeira Joy: Seus Pokemons foram totalmente restaurados!")
+    return true
+end
+
+local function placeDecorItem(pos, itemId, count)
+    local it = Game.createItem(itemId, count or 1, pos)
+    if it then
+        it:setActionId(9599)
+    end
+    return it
+end
+
+local function placeInteractivePad(pos, groundId, actionId)
+    local tile = setTileFloorAndClear(pos, groundId)
+    if tile and tile:getGround() then
+        tile:getGround():setActionId(actionId)
+    end
+    return tile
+end
+
 function PokeDungeon.buildMap()
-    -- 1. CONSTRUÇÃO DO LOBBY (1801 a 1809, 2251 a 2259, z = 7)
-    for x = 1801, 1809 do
-        for y = 2251, 2259 do
+    -- ====================================================================
+    -- 1. PRAÇA POKÉMON & ENTRADA MONUMENTAL DA DUNGEON (1795..1815, 2245..2265, z = 7)
+    -- Inspirada nos Jogos Clássicos (FireRed/LeafGreen Recomp & Pokémon Mystery Dungeon)
+    -- ====================================================================
+    for x = 1795, 1815 do
+        for y = 2245, 2265 do
             local pos = Position(x, y, 7)
-            if x == 1801 or x == 1809 or y == 2251 or y == 2259 then
+            local isOuterWall = (x == 1795 or x == 1815 or y == 2245 or y == 2265)
+            local isForestRing = (x == 1796 or x == 1814 or y == 2264)
+            local isCaveFacade = (y >= 2246 and y <= 2248 and x >= 1796 and x <= 1814)
+            local isCentralAve = (x >= 1804 and x <= 1806 and y >= 2248 and y <= 2262)
+            local isPlazaCenter = (x >= 1802 and x <= 1808 and y >= 2253 and y <= 2257)
+            local isOakLab = (x >= 1798 and x <= 1801 and y >= 2249 and y <= 2252)
+            local isKecleonShop = (x >= 1798 and x <= 1801 and y >= 2257 and y <= 2260)
+            local isIndigoShrine = (x >= 1809 and x <= 1812 and y >= 2249 and y <= 2252)
+            local isFrontierHub = (x >= 1809 and x <= 1812 and y >= 2257 and y <= 2260)
+
+            if isOuterWall then
                 placeWall(pos)
+            elseif isCaveFacade then
+                -- Fachada Rochosa Monumental da Caverna de Cerulean / Victory Road ao Norte
+                if x >= 1803 and x <= 1807 and y >= 2247 then
+                    setTileFloorAndClear(pos, (x == 1805) and 3166 or 424)
+                else
+                    setTileFloorAndClear(pos, 4405)
+                    if y == 2246 or x == 1796 or x == 1814 then
+                        placeDecorItem(pos, ((x + y) % 2 == 0) and 8635 or 3610, 1)
+                    end
+                end
+            elseif isForestRing then
+                -- Bosque Natural de Kanto cercando a Praça Pokémon
+                setTileFloorAndClear(pos, 4526)
+                placeDecorItem(pos, ((x + y) % 2 == 0) and 2700 or 2701, 1)
+            elseif isCentralAve or isPlazaCenter then
+                -- Avenida Real da Liga Pokémon & Rosa dos Ventos Central
+                if x == 1805 or y == 2255 then
+                    setTileFloorAndClear(pos, 3166)
+                else
+                    setTileFloorAndClear(pos, 424)
+                end
+            elseif isOakLab then
+                -- Piso Clássico do Laboratório do Prof. Carvalho (Noroeste)
+                setTileFloorAndClear(pos, ((x + y) % 2 == 0) and 416 or 417)
+            elseif isKecleonShop then
+                -- Piso Ornamentado da Tenda dos Irmãos Kecleon (Sudoeste)
+                setTileFloorAndClear(pos, 3173)
+            elseif isIndigoShrine then
+                -- Lagoa Luminescente & Santuário da Liga Índigo (Nordeste)
+                if x >= 1811 and y <= 2250 then
+                    setTileFloorAndClear(pos, 4608)
+                else
+                    setTileFloorAndClear(pos, 424)
+                end
+            elseif isFrontierHub then
+                -- Estação Battle Frontier / Sandbox GM (Sudeste)
+                setTileFloorAndClear(pos, ((x + y) % 2 == 0) and 3166 or 424)
             else
-                local floorId = ((x + y) % 2 == 0) and 416 or 417
-                setTileFloorAndClear(pos, floorId)
+                -- Gramado Vivo de Kanto com Canteiros de Flores Silvestres
+                setTileFloorAndClear(pos, 4526 + ((x + y) % 3))
+                if (x + y * 3) % 7 == 0 then
+                    placeDecorItem(pos, 2744 + ((x + y) % 3), 1)
+                end
             end
         end
     end
 
-    -- Portais do Lobby:
-    -- Norte (1805, 2252, 7): Abre Seleção de Pokémon / Inicia Run (ActionId 9501)
+    -- Entrada Monumental da Dungeon (Norte da Praça): Portais, Colunas Celestiais e Piras Sagradas
+    placePortal(Position(1805, 2248, 7), 9501)
     placePortal(Position(1805, 2252, 7), 9501)
-    -- Sul (1805, 2258, 7): Sai da Dungeon / Volta ao Templo (ActionId 9502)
+    placeDecorItem(Position(1803, 2248, 7), 5308, 1)
+    placeDecorItem(Position(1807, 2248, 7), 5308, 1)
+    placeDecorItem(Position(1804, 2248, 7), 1484, 1)
+    placeDecorItem(Position(1806, 2248, 7), 1484, 1)
+    placeDecorItem(Position(1803, 2252, 7), 1484, 1)
+    placeDecorItem(Position(1807, 2252, 7), 1484, 1)
+
+    -- Portão Sul de Retorno ao Centro Pokémon de Saffron (Sul da Praça)
     placePortal(Position(1805, 2258, 7), 9502)
+    placePortal(Position(1805, 2262, 7), 9502)
+    placeDecorItem(Position(1803, 2258, 7), 1484, 1)
+    placeDecorItem(Position(1807, 2258, 7), 1484, 1)
+    placeDecorItem(Position(1803, 2262, 7), 5308, 1)
+    placeDecorItem(Position(1807, 2262, 7), 5308, 1)
 
-    -- Tochas nos cantos do Lobby
-    Game.createItem(1484, 1, Position(1802, 2252, 7))
-    Game.createItem(1484, 1, Position(1808, 2252, 7))
-    Game.createItem(1484, 1, Position(1802, 2258, 7))
-    Game.createItem(1484, 1, Position(1808, 2258, 7))
+    -- [Ala Noroeste] Bancada do Prof. Carvalho: Exposição dos Starters Clássicos (Fire, Water, Grass, Electric)
+    placeDecorItem(Position(1798, 2249, 7), 26728, 1) -- Fire Stone (Charmander)
+    placeDecorItem(Position(1798, 2249, 7), 26662, 1) -- Pokéball
+    placeDecorItem(Position(1799, 2249, 7), 26736, 1) -- Water Stone (Squirtle)
+    placeDecorItem(Position(1799, 2249, 7), 26660, 1) -- Greatball
+    placeDecorItem(Position(1800, 2249, 7), 26731, 1) -- Leaf Stone (Bulbasaur)
+    placeDecorItem(Position(1800, 2249, 7), 26688, 1) -- Ultraball
+    placeDecorItem(Position(1801, 2249, 7), 26734, 1) -- Thunder Stone (Pikachu)
+    placeDecorItem(Position(1801, 2249, 7), 26683, 1) -- Premierball
+    placeInteractivePad(Position(1800, 2251, 7), 3166, 9501) -- Tapete Interativo Starters
 
-    -- 2. Constrói o Bioma inicial da Arena (Andar 1)
+    -- [Ala Sudoeste] Tenda dos Irmãos Kecleon: Upgrades, Skins Shiny & Contratos Pré-Run
+    placeDecorItem(Position(1798, 2259, 7), 1740, 1)  -- Baú de Relíquias Kecleon
+    placeDecorItem(Position(1799, 2259, 7), 26695, 1) -- Boost Machine Clássica
+    placeDecorItem(Position(1800, 2259, 7), 2160, 50) -- Pilha de Crystal Coins
+    placeDecorItem(Position(1801, 2259, 7), 26727, 1) -- Enigma Stone
+    placeInteractivePad(Position(1800, 2258, 7), 417, 9503) -- Tapete Interativo Loja Kecleon
+
+    -- [Ala Nordeste] Monumento da Liga Índigo & Fonte Termal Luminescente
+    placeDecorItem(Position(1810, 2249, 7), 30198, 1) -- Troféu da Liga Índigo
+    placeDecorItem(Position(1809, 2249, 7), 32802, 1) -- Ancient Hieroglyph
+    placeDecorItem(Position(1812, 2251, 7), 8635, 1)  -- Cristal da Fonte
+    placeInteractivePad(Position(1810, 2251, 7), 3166, 9504) -- Tapete Interativo Hall da Fama
+
+    -- [Ala Sudeste] Estação Battle Frontier / Sandbox GM
+    placeDecorItem(Position(1810, 2259, 7), 26749, 1) -- Unique Ancient Stone
+    placeDecorItem(Position(1811, 2259, 7), 26744, 1) -- Dragon Stone
+    placeInteractivePad(Position(1810, 2258, 7), 417, 9505) -- Tapete Interativo Painel Sandbox
+
+    -- ====================================================================
+    -- 2. CONSTRÓI O BIOMA INICIAL DA ARENA (ANDAR 1)
+    -- ====================================================================
     PokeDungeon.buildFloorBiome(1)
 
-    -- 3. ESTAÇÃO DE TELEPORTE DENTRO DO CENTRO POKÉMON DE SAFFRON (1052, 1050, 7)
-    -- Garante que o tile de chegada (1054, 1050, 7) fique livre e cria o Portal de Evento 2 SQMs ao lado!
-    setTileFloorAndClear(PokeDungeon.config.templePos, 416)
-    local cpPos = PokeDungeon.config.cpPortalPos
+    -- ====================================================================
+    -- 3. REPAGINADA DA CIDADE INICIAL (CENTRO POKÉMON DE SAFFRON & JARDIM DE KANTO)
+    -- ====================================================================
+    -- Sincroniza o templePos com a Town oficial caso necessário
+    local saffronTown = Town("Saffron") or Town(34) or Town("Pallet") or Town(42)
+    if saffronTown then
+        PokeDungeon.config.templePos = saffronTown:getTemplePosition()
+    end
+
+    local tPos = PokeDungeon.config.templePos -- (1054, 1050, 7)
+    local cpPos = PokeDungeon.config.cpPortalPos -- (1052, 1050, 7)
+
+    -- Tile Central de Chegada no Centro Pokémon: Estação de Cura Automática da Enfermeira Joy (ActionID 9506)
+    placeInteractivePad(tPos, 424, 9506)
+
+    -- Passarela Real Dourada ligando o Spawn (1054, 1050, 7) até o Portal da Dungeon (1052, 1050, 7)
+    setTileFloorAndClear(Position(tPos.x - 1, tPos.y, tPos.z), 3166)
+
+    -- Portal Dimensional da Dungeon dentro do Centro Pokémon (ActionID 9500)
     setTileFloorAndClear(cpPos, 417)
     placePortal(cpPos, 9500)
 
-    -- Inicia o pulso visual periódico nos portais do Centro Pokémon e do Lobby
+    -- Embelezamento Seguro do Centro Pokémon e dos Jardins Externos da Cidade Inicial (Kanto Recomp)
+    -- Só adiciona flores em gramados externos livres para nunca bloquear portas, balcões ou NPCs
+    for dx = -12, 12 do
+        for dy = -12, 12 do
+            local checkPos = Position(tPos.x + dx, tPos.y + dy, tPos.z)
+            local tile = Tile(checkPos)
+            if tile and tile:getGround() and not tile:hasFlag(TILESTATE_BLOCKSOLID) and not tile:hasFlag(TILESTATE_FLOORCHANGE) then
+                local gId = tile:getGround():getId()
+                local itemCount = tile:getItems() and #tile:getItems() or 0
+                if itemCount == 0 and tile:getCreatureCount() == 0 then
+                    -- Se for grama externa de Saffron (4526..4541), cria canteiros floridos clássicos de Kanto
+                    if gId >= 4526 and gId <= 4541 and ((dx * 3 + dy * 5) % 11 == 0) then
+                        placeDecorItem(checkPos, 2744 + ((math.abs(dx) + math.abs(dy)) % 3), 1)
+                    end
+                end
+            end
+        end
+    end
+
+    -- Inicia o pulso visual periódico nos portais e estações interativas
     if not PokeDungeon.portalBeaconStarted then
         PokeDungeon.portalBeaconStarted = true
         PokeDungeon.runPortalBeaconLoop()
     end
 
     PokeDungeon.mapInitialized = true
-    print(">> [Poketestes by Raph] Mapa, Estacao do Centro Pokemon, Lobby, Arena e 6 Biomas Graficos construidos com sucesso!")
+    print(">> [Poketestes by Raph] Cidade Inicial (CP Saffron), Praca Pokemon (Lobby 21x21), Entrada da Dungeon e 6 Biomas construidos com sucesso!")
 end
 
 function PokeDungeon.runPortalBeaconLoop()
@@ -1115,10 +1276,42 @@ function PokeDungeon.runPortalBeaconLoop()
         cpPos:sendMagicEffect(CONST_ME_MAGIC_BLUE)
         Game.sendAnimatedText(cpPos, "DUNGEON", TEXTCOLOR_LIGHTBLUE)
     end
-    local lobbyNorth = Position(1805, 2252, 7)
-    lobbyNorth:sendMagicEffect(CONST_ME_MAGIC_GREEN)
-    Game.sendAnimatedText(lobbyNorth, "JOGAR!", TEXTCOLOR_LIGHTGREEN)
+    local tPos = PokeDungeon.config.templePos
+    if tPos then
+        tPos:sendMagicEffect(CONST_ME_MAGIC_GREEN)
+        Game.sendAnimatedText(tPos, "CURA JOY", TEXTCOLOR_LIGHTGREEN)
+    end
 
+    -- Portões Norte da Masmorra (Praça Pokémon)
+    local gateNorth1 = Position(1805, 2248, 7)
+    gateNorth1:sendMagicEffect(CONST_ME_MAGIC_GREEN)
+    Game.sendAnimatedText(gateNorth1, "MASMORRA!", TEXTCOLOR_LIGHTGREEN)
+
+    local gateNorth2 = Position(1805, 2252, 7)
+    gateNorth2:sendMagicEffect(CONST_ME_MAGIC_GREEN)
+    Game.sendAnimatedText(gateNorth2, "JOGAR!", TEXTCOLOR_LIGHTGREEN)
+
+    -- Bancada do Prof. Carvalho (Noroeste)
+    local oakPad = Position(1800, 2251, 7)
+    oakPad:sendMagicEffect(CONST_ME_FIREWORK_RED)
+    Game.sendAnimatedText(oakPad, "STARTERS", TEXTCOLOR_ORANGE)
+
+    -- Tenda dos Irmãos Kecleon (Sudoeste)
+    local kecleonPad = Position(1800, 2258, 7)
+    kecleonPad:sendMagicEffect(CONST_ME_GIFT_WRAPS)
+    Game.sendAnimatedText(kecleonPad, "KECLEON", TEXTCOLOR_YELLOW)
+
+    -- Monumento da Liga Índigo / Hall da Fama (Nordeste)
+    local hallPad = Position(1810, 2251, 7)
+    hallPad:sendMagicEffect(CONST_ME_FIREWORK_YELLOW)
+    Game.sendAnimatedText(hallPad, "RANKING", TEXTCOLOR_YELLOW)
+
+    -- Console Battle Frontier / Sandbox GM (Sudeste)
+    local gmPad = Position(1810, 2258, 7)
+    gmPad:sendMagicEffect(CONST_ME_MAGIC_BLUE)
+    Game.sendAnimatedText(gmPad, "SANDBOX", TEXTCOLOR_LIGHTBLUE)
+
+    -- Portão Sul de Retorno a Saffron
     local lobbySouth = Position(1805, 2258, 7)
     lobbySouth:sendMagicEffect(CONST_ME_TELEPORT)
     Game.sendAnimatedText(lobbySouth, "CP SAFFRON", TEXTCOLOR_WHITE)

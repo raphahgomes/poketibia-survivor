@@ -1,3 +1,4 @@
+-- PokeGypt GOD tool: give money
 -- Poketestes by Raph GOD tool: give money
 -- Usage: /addmoney playerName, amount
 function onSay(player, words, param)

@@ -1,3 +1,4 @@
+-- PokeGypt Account Manager NPC
 -- Poketestes by Raph Account Manager NPC
 -- Lets players create accounts, create characters, change passwords,
 -- and delete characters entirely in-game — no external tools needed.

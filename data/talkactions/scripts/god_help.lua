@@ -1,3 +1,4 @@
+-- PokeGypt GOD tool: list available GOD commands
 -- Poketestes by Raph GOD tool: list available GOD commands
 -- Usage: /god
 function onSay(player, words, param)
@@ -6,6 +7,7 @@ function onSay(player, words, param)
 	end
 
 	local help = {
+		"=== PokeGypt GOD tool ===",
 		"=== Poketestes by Raph GOD tool ===",
 		"/createacc name, password        - create an account",
 		"/addmoney player, amount         - give gold",

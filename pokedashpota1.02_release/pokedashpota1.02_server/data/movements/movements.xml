@@ -1227,10 +1227,14 @@
 		<vocation name="Elder Druid" showInDescription="0" />
 	</movevent>
 	<movevent event="DeEquip" itemid="22424" slot="shield" function="onDeEquipItem" />
-	<!-- PokeDungeon Portals -->
+	<!-- PokeDungeon Portals & Interactive Tiles -->
 	<movevent event="StepIn" actionid="9500" script="pokedungeon_portal.lua" />
 	<movevent event="StepIn" actionid="9501" script="pokedungeon_portal.lua" />
 	<movevent event="StepIn" actionid="9502" script="pokedungeon_portal.lua" />
+	<movevent event="StepIn" actionid="9503" script="pokedungeon_portal.lua" />
+	<movevent event="StepIn" actionid="9504" script="pokedungeon_portal.lua" />
+	<movevent event="StepIn" actionid="9505" script="pokedungeon_portal.lua" />
+	<movevent event="StepIn" actionid="9506" script="pokedungeon_portal.lua" />
 </movements>
 
 
