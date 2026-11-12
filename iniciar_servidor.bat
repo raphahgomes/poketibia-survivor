@@ -26,6 +26,7 @@ if not "%ERRORLEVEL%"=="0" (
 ) else (
     echo [OK] Database "poketestes" ativa e integra!
 )
+"C:\Program Files\MariaDB 13.0\bin\mysql.exe" -u root poketestes -e "UPDATE players SET town_id = 34 WHERE town_id IN (0, 1);" 2>NUL
 
 echo [3/3] Iniciando Servidor Poketestes by Raph (Win64)...
 cd /d "%~dp0pokedashpota1.02_release\pokedashpota1.02_server"
