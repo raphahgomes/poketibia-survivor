@@ -341,7 +341,7 @@ PokeDungeon = {
 
     -- Configurações de Coordenadas, Andares e Biomas Gráficos
     config = {
-        lobbyPos = Position(1805, 2255, 7),
+        lobbyPos = Position(1770, 2260, 7),
         arenaPos = Position(1840, 2270, 7),
         arenaArea = {
             from = Position(1820, 2250, 7),
@@ -859,8 +859,8 @@ local function setTileFloorAndClear(pos, groundId)
     return tile
 end
 
-local function placeWall(pos)
-    setTileFloorAndClear(pos, 4526)
+local function placeWall(pos, groundId)
+    setTileFloorAndClear(pos, groundId or 4526)
     Game.createItem(1049, 1, pos)
 end
 
@@ -923,50 +923,42 @@ function PokeDungeon.buildFloorBiome(floorNum)
             if x == 1820 or x == 1860 or y == 2250 or y == 2290 then
                 placeWall(pos)
             else
-                -- Hash espacial determinístico mas variado por andar
                 local h = (x * 37 + y * 73 + floorNum * 19) % 100
-                local patch = ((math.floor(x / 3) * 17 + math.floor(y / 3) * 31) % 10)
                 local fId = baseGround
 
-                -- 1. Texturas Orgânicas de Piso por Bioma
+                -- 1. Piso Uniforme por Bioma (sem recortes quadrados sem borda)
                 if biome == "grassland" then
-                    if patch == 0 or patch == 1 then fId = 4667        -- Manchas de Terra (Dirt)
-                    elseif patch == 2 then fId = 4580                  -- Grama Musgosa (Swamp patch)
-                    else fId = 4526 + ((x + y) % 3)                    -- Variações naturais de Grama
-                    end
+                    fId = 4526
                 elseif biome == "cave" then
-                    if (x == 1840 or y == 2270) then fId = 416         -- Passarela central de pedra
-                    elseif patch <= 2 then fId = 4405                  -- Solo rochoso escuro
-                    else fId = 4554                                    -- Cascalho de caverna
-                    end
+                    fId = 4554
                 elseif biome == "ghost" then
-                    if patch <= 2 then fId = 4580                      -- Pântano sombrio
-                    elseif (x + y) % 5 == 0 then fId = 3166            -- Laje entalhada de cripta
-                    else fId = 407                                     -- Mármore negro
-                    end
+                    fId = 407
                 elseif biome == "ice" then
-                    if patch <= 3 then fId = 8570                      -- Pista de Gelo Escorregadio (Speed Boost!)
-                    else fId = 4737                                    -- Neve profunda
+                    if math.abs(x - 1840) <= 4 and math.abs(y - 2270) <= 4 then
+                        fId = 8570 -- Quadra central retangular limpa de Gelo Escorregadio
+                    else
+                        fId = 4737
                     end
                 elseif biome == "volcano" then
-                    if patch <= 2 then fId = 3264                      -- Terra vulcânica ardente (Magma)
-                    elseif patch == 3 then fId = 4667                  -- Cinzas vulcânicas
-                    else fId = 407                                     -- Basalto escuro
+                    if math.abs(x - 1840) <= 4 and math.abs(y - 2270) <= 4 then
+                        fId = 3264 -- Quadra central retangular limpa de Magma
+                    else
+                        fId = 407
                     end
                 elseif biome == "divine" then
-                    if (x == 1840 or y == 2270) then fId = 3166        -- Caminho real dourado/entalhado
-                    elseif (x + y) % 2 == 0 then fId = 3173            -- Piso ornamentado de santuário
-                    else fId = 424                                     -- Mármore branco sagrado
+                    if math.abs(x - 1840) <= 1 or math.abs(y - 2270) <= 1 then
+                        fId = 3166 -- Passarela central em cruz entalhada
+                    else
+                        fId = 406  -- Marmore branco uniforme
                     end
                 end
 
                 setTileFloorAndClear(pos, fId)
 
-                -- 2. Decorações de Borda Interna (1 SQM das paredes) e Props Destrutíveis na Arena
+                -- 2. Decorações Simétricas de Perímetro Interno e Props Destrutíveis Espaçados
                 local isInnerBorder = (x == 1821 or x == 1859 or y == 2251 or y == 2289)
                 if not isProtectedArenaPos(x, y) then
-                    if isInnerBorder and h < 45 then
-                        -- Árvores, Cristais Gigantes, Pilares e Fontes de Lava no perímetro
+                    if isInnerBorder and ((x + y) % 2 == 0) then
                         if biome == "grassland" then
                             Game.createItem((h % 2 == 0) and 2700 or 2701, 1, pos)
                         elseif biome == "cave" then
@@ -982,46 +974,45 @@ function PokeDungeon.buildFloorBiome(floorNum)
                         end
                     elseif not isInnerBorder then
                         -- Props Destrutíveis (Arbustos Cortáveis 2767 e Rochas/Cristais Quebráveis 3610/3615/8637)
-                        -- e Detalhes Rasteiros Caminháveis (Flores, Cogumelos, Gás)
                         if biome == "grassland" then
                             if h < 4 then
-                                Game.createItem(2767, 1, pos) -- Arbusto Cortável (Dropa Berry/EXP!)
+                                Game.createItem(2767, 1, pos)
                             elseif h == 5 then
-                                Game.createItem(3610, 1, pos) -- Pedra Quebrável
+                                Game.createItem(3610, 1, pos)
                             elseif h >= 92 then
-                                Game.createItem(2744 + (h % 3), 1, pos) -- Flores silvestres
+                                Game.createItem(2744 + (h % 3), 1, pos)
                             end
                         elseif biome == "cave" then
                             if h < 4 then
-                                Game.createItem(8637, 1, pos) -- Cristal Quebrável (Dropa Gemas/Coins!)
+                                Game.createItem(8637, 1, pos)
                             elseif h == 5 or h == 6 then
-                                Game.createItem(3610, 1, pos) -- Rocha de Caverna Quebrável
+                                Game.createItem(3610, 1, pos)
                             end
                         elseif biome == "ghost" then
                             if h < 3 then
-                                Game.createItem(2767, 1, pos) -- Arbusto Sombrio Cortável
+                                Game.createItem(2767, 1, pos)
                             elseif h == 4 then
-                                Game.createItem(3610, 1, pos) -- Lápide/Pedra Quebrável
-                            elseif fId == 4580 and h >= 95 then
-                                Game.createItem(1496, 1, pos) -- Névoa de Gás Venenoso
+                                Game.createItem(3610, 1, pos)
+                            elseif h >= 95 then
+                                Game.createItem(1496, 1, pos)
                             end
                         elseif biome == "ice" then
                             if h < 4 then
-                                Game.createItem(8637, 1, pos) -- Cristal de Gelo Quebrável
+                                Game.createItem(8637, 1, pos)
                             elseif h == 5 then
-                                Game.createItem(3615, 1, pos) -- Rocha Congelada Quebrável
+                                Game.createItem(3615, 1, pos)
                             end
                         elseif biome == "volcano" then
                             if h < 4 then
-                                Game.createItem(3610, 1, pos) -- Rocha de Magma Quebrável
+                                Game.createItem(3610, 1, pos)
                             elseif h == 5 then
-                                Game.createItem(8637, 1, pos) -- Cristal Ígneo Quebrável
+                                Game.createItem(8637, 1, pos)
                             end
                         elseif biome == "divine" then
                             if h < 4 then
-                                Game.createItem(8637, 1, pos) -- Cristal Celestial Quebrável
+                                Game.createItem(8637, 1, pos)
                             elseif h == 5 then
-                                Game.createItem(3610, 1, pos) -- Relíquia de Pedra Quebrável
+                                Game.createItem(3610, 1, pos)
                             end
                         end
                     end
@@ -1100,119 +1091,146 @@ local function placeInteractivePad(pos, groundId, actionId)
     return tile
 end
 
+local function isCleanWalkableTile(pos)
+    local tile = Tile(pos)
+    if not tile or not tile:getGround() then
+        return false
+    end
+    if tile:hasFlag(TILESTATE_BLOCKSOLID) or tile:hasFlag(TILESTATE_FLOORCHANGE) then
+        return false
+    end
+    local items = tile:getItems()
+    if items then
+        for _, it in ipairs(items) do
+            if it and it:getId() ~= 1387 then
+                return false
+            end
+        end
+    end
+    return true
+end
+
+local function clearTileAllItemsAndSetGround(pos, groundId)
+    local tile = Tile(pos)
+    if not tile then
+        Game.createTile(pos)
+        tile = Tile(pos)
+    end
+    if tile then
+        local items = tile:getItems()
+        if items then
+            for i = #items, 1, -1 do
+                if items[i] then
+                    items[i]:remove()
+                end
+            end
+        end
+        local ground = tile:getGround()
+        if not ground then
+            Game.createItem(groundId, 1, pos)
+        else
+            ground:transform(groundId)
+        end
+    end
+    return tile
+end
+
 function PokeDungeon.buildMap()
     -- ====================================================================
-    -- 1. PRAÇA POKÉMON & ENTRADA MONUMENTAL DA DUNGEON (1795..1815, 2245..2265, z = 7)
-    -- Inspirada nos Jogos Clássicos (FireRed/LeafGreen Recomp & Pokémon Mystery Dungeon)
+    -- 0. LIMPEZA DA ÁREA ANTIGA DO LOBBY (1795..1815, 2245..2265, z = 7)
+    -- Remove paredes e portais antigos perto da Arena
     -- ====================================================================
     for x = 1795, 1815 do
         for y = 2245, 2265 do
+            clearTileAllItemsAndSetGround(Position(x, y, 7), 4526)
+        end
+    end
+
+    -- ====================================================================
+    -- 1. SALÃO DA LIGA / RECEPÇÃO SURVIVOR (1760..1780, 2250..2270, z = 7)
+    -- 40 SQMs a Oeste da Arena (1820..1860) — arquitetura limpa e coesa
+    -- ====================================================================
+    for x = 1760, 1780 do
+        for y = 2250, 2270 do
             local pos = Position(x, y, 7)
-            local isOuterWall = (x == 1795 or x == 1815 or y == 2245 or y == 2265)
-            local isForestRing = (x == 1796 or x == 1814 or y == 2264)
-            local isCaveFacade = (y >= 2246 and y <= 2248 and x >= 1796 and x <= 1814)
-            local isCentralAve = (x >= 1804 and x <= 1806 and y >= 2248 and y <= 2262)
-            local isPlazaCenter = (x >= 1802 and x <= 1808 and y >= 2253 and y <= 2257)
-            local isOakLab = (x >= 1798 and x <= 1801 and y >= 2249 and y <= 2252)
-            local isKecleonShop = (x >= 1798 and x <= 1801 and y >= 2257 and y <= 2260)
-            local isIndigoShrine = (x >= 1809 and x <= 1812 and y >= 2249 and y <= 2252)
-            local isFrontierHub = (x >= 1809 and x <= 1812 and y >= 2257 and y <= 2260)
+            local isOuterWall = (x == 1760 or x == 1780 or y == 2250 or y == 2270)
+            local isCrossPath = (x >= 1769 and x <= 1771) or (y >= 2259 and y <= 2261)
 
             if isOuterWall then
-                placeWall(pos)
-            elseif isCaveFacade then
-                -- Fachada Rochosa Monumental da Caverna de Cerulean / Victory Road ao Norte
-                if x >= 1803 and x <= 1807 and y >= 2247 then
-                    setTileFloorAndClear(pos, (x == 1805) and 3166 or 424)
-                else
-                    setTileFloorAndClear(pos, 4405)
-                    if y == 2246 or x == 1796 or x == 1814 then
-                        placeDecorItem(pos, ((x + y) % 2 == 0) and 8635 or 3610, 1)
-                    end
-                end
-            elseif isForestRing then
-                -- Bosque Natural de Kanto cercando a Praça Pokémon
-                setTileFloorAndClear(pos, 4526)
-                placeDecorItem(pos, ((x + y) % 2 == 0) and 2700 or 2701, 1)
-            elseif isCentralAve or isPlazaCenter then
-                -- Avenida Real da Liga Pokémon & Rosa dos Ventos Central
-                if x == 1805 or y == 2255 then
-                    setTileFloorAndClear(pos, 3166)
-                else
-                    setTileFloorAndClear(pos, 424)
-                end
-            elseif isOakLab then
-                -- Piso Clássico do Laboratório do Prof. Carvalho (Noroeste)
-                setTileFloorAndClear(pos, ((x + y) % 2 == 0) and 416 or 417)
-            elseif isKecleonShop then
-                -- Piso Ornamentado da Tenda dos Irmãos Kecleon (Sudoeste)
-                setTileFloorAndClear(pos, 3173)
-            elseif isIndigoShrine then
-                -- Lagoa Luminescente & Santuário da Liga Índigo (Nordeste)
-                if x >= 1811 and y <= 2250 then
-                    setTileFloorAndClear(pos, 4608)
-                else
-                    setTileFloorAndClear(pos, 424)
-                end
-            elseif isFrontierHub then
-                -- Estação Battle Frontier / Sandbox GM (Sudeste)
-                setTileFloorAndClear(pos, ((x + y) % 2 == 0) and 3166 or 424)
+                placeWall(pos, 406)
+            elseif isCrossPath then
+                setTileFloorAndClear(pos, 3166)
             else
-                -- Gramado Vivo de Kanto com Canteiros de Flores Silvestres
-                setTileFloorAndClear(pos, 4526 + ((x + y) % 3))
-                if (x + y * 3) % 7 == 0 then
-                    placeDecorItem(pos, 2744 + ((x + y) % 3), 1)
-                end
+                setTileFloorAndClear(pos, 406)
             end
         end
     end
 
-    -- Entrada Monumental da Dungeon (Norte da Praça): Portais, Colunas Celestiais e Piras Sagradas
-    placePortal(Position(1805, 2248, 7), 9501)
-    placePortal(Position(1805, 2252, 7), 9501)
-    placeDecorItem(Position(1803, 2248, 7), 5308, 1)
-    placeDecorItem(Position(1807, 2248, 7), 5308, 1)
-    placeDecorItem(Position(1804, 2248, 7), 1484, 1)
-    placeDecorItem(Position(1806, 2248, 7), 1484, 1)
-    placeDecorItem(Position(1803, 2252, 7), 1484, 1)
-    placeDecorItem(Position(1807, 2252, 7), 1484, 1)
+    -- Colunas simétricas no Salão e vasos ornamentais nos 4 cantos internos
+    local lobbyPillars = {
+        Position(1767, 2254, 7), Position(1773, 2254, 7),
+        Position(1767, 2266, 7), Position(1773, 2266, 7),
+        Position(1766, 2252, 7), Position(1774, 2252, 7)
+    }
+    for _, pPos in ipairs(lobbyPillars) do
+        placeDecorItem(pPos, 5308, 1)
+    end
 
-    -- Portão Sul de Retorno ao Centro Pokémon de Saffron (Sul da Praça)
-    placePortal(Position(1805, 2258, 7), 9502)
-    placePortal(Position(1805, 2262, 7), 9502)
-    placeDecorItem(Position(1803, 2258, 7), 1484, 1)
-    placeDecorItem(Position(1807, 2258, 7), 1484, 1)
-    placeDecorItem(Position(1803, 2262, 7), 5308, 1)
-    placeDecorItem(Position(1807, 2262, 7), 5308, 1)
+    local cornerFlowers = {
+        Position(1761, 2251, 7), Position(1779, 2251, 7),
+        Position(1761, 2269, 7), Position(1779, 2269, 7)
+    }
+    for _, fPos in ipairs(cornerFlowers) do
+        placeDecorItem(fPos, 2104, 1)
+    end
 
-    -- [Ala Noroeste] Bancada do Prof. Carvalho: Exposição dos Starters Clássicos (Fire, Water, Grass, Electric)
-    placeDecorItem(Position(1798, 2249, 7), 26728, 1) -- Fire Stone (Charmander)
-    placeDecorItem(Position(1798, 2249, 7), 26662, 1) -- Pokéball
-    placeDecorItem(Position(1799, 2249, 7), 26736, 1) -- Water Stone (Squirtle)
-    placeDecorItem(Position(1799, 2249, 7), 26660, 1) -- Greatball
-    placeDecorItem(Position(1800, 2249, 7), 26731, 1) -- Leaf Stone (Bulbasaur)
-    placeDecorItem(Position(1800, 2249, 7), 26688, 1) -- Ultraball
-    placeDecorItem(Position(1801, 2249, 7), 26734, 1) -- Thunder Stone (Pikachu)
-    placeDecorItem(Position(1801, 2249, 7), 26683, 1) -- Premierball
-    placeInteractivePad(Position(1800, 2251, 7), 3166, 9501) -- Tapete Interativo Starters
+    -- Portão Norte da Masmorra (ActionID 9501 -> PokeDungeon.openPokemonSelectModal)
+    placePortal(Position(1770, 2252, 7), 9501)
+    placeDecorItem(Position(1768, 2252, 7), 1484, 1)
+    placeDecorItem(Position(1772, 2252, 7), 1484, 1)
 
-    -- [Ala Sudoeste] Tenda dos Irmãos Kecleon: Upgrades, Skins Shiny & Contratos Pré-Run
-    placeDecorItem(Position(1798, 2259, 7), 1740, 1)  -- Baú de Relíquias Kecleon
-    placeDecorItem(Position(1799, 2259, 7), 26695, 1) -- Boost Machine Clássica
-    placeDecorItem(Position(1800, 2259, 7), 2160, 50) -- Pilha de Crystal Coins
-    placeDecorItem(Position(1801, 2259, 7), 26727, 1) -- Enigma Stone
-    placeInteractivePad(Position(1800, 2258, 7), 417, 9503) -- Tapete Interativo Loja Kecleon
+    -- Portão Sul de Retorno ao Centro Pokémon de Saffron (ActionID 9502)
+    placePortal(Position(1770, 2268, 7), 9502)
+    placeDecorItem(Position(1768, 2268, 7), 1484, 1)
+    placeDecorItem(Position(1772, 2268, 7), 1484, 1)
 
-    -- [Ala Nordeste] Monumento da Liga Índigo & Fonte Termal Luminescente
-    placeDecorItem(Position(1810, 2249, 7), 30198, 1) -- Troféu da Liga Índigo
-    placeDecorItem(Position(1809, 2249, 7), 32802, 1) -- Ancient Hieroglyph
-    placeDecorItem(Position(1812, 2251, 7), 8635, 1)  -- Cristal da Fonte
-    placeInteractivePad(Position(1810, 2251, 7), 3166, 9504) -- Tapete Interativo Hall da Fama
+    -- [Ala Noroeste] Bancada do Prof. Carvalho: 4 Pedestais Individuais (1 Pokébola por pedestal)
+    local starterDisplay = {
+        { pos = Position(1762, 2253, 7), ballId = 26662 }, -- Empty Pokeball
+        { pos = Position(1763, 2253, 7), ballId = 26660 }, -- Empty Greatball
+        { pos = Position(1764, 2253, 7), ballId = 26688 }, -- Empty Ultraball
+        { pos = Position(1765, 2253, 7), ballId = 26683 }  -- Empty Premierball
+    }
+    for _, entry in ipairs(starterDisplay) do
+        placeDecorItem(entry.pos, 9596, 1)
+        placeDecorItem(entry.pos, entry.ballId, 1)
+    end
+    placeInteractivePad(Position(1764, 2255, 7), 417, 9501)
 
-    -- [Ala Sudeste] Estação Battle Frontier / Sandbox GM
-    placeDecorItem(Position(1810, 2259, 7), 26749, 1) -- Unique Ancient Stone
-    placeDecorItem(Position(1811, 2259, 7), 26744, 1) -- Dragon Stone
-    placeInteractivePad(Position(1810, 2258, 7), 417, 9505) -- Tapete Interativo Painel Sandbox
+    -- [Ala Sudoeste] Loja Kecleon & Contratos Pré-Run (ActionID 9503 -> openUpgradesModal)
+    placeDecorItem(Position(1762, 2266, 7), 1619, 1)
+    placeDecorItem(Position(1762, 2266, 7), 1740, 1)
+    placeDecorItem(Position(1763, 2266, 7), 1619, 1)
+    placeDecorItem(Position(1763, 2266, 7), 2160, 50)
+    placeDecorItem(Position(1764, 2266, 7), 26695, 1)
+    placeDecorItem(Position(1765, 2266, 7), 1619, 1)
+    placeDecorItem(Position(1765, 2266, 7), 26727, 1)
+    placeInteractivePad(Position(1764, 2264, 7), 417, 9503)
+
+    -- [Ala Nordeste] Hall da Fama / Ranking da Liga Índigo (ActionID 9504 -> showLeaderboard)
+    placeDecorItem(Position(1775, 2253, 7), 1442, 1)
+    placeDecorItem(Position(1776, 2253, 7), 9596, 1)
+    placeDecorItem(Position(1776, 2253, 7), 30198, 1)
+    placeDecorItem(Position(1777, 2253, 7), 1442, 1)
+    placeInteractivePad(Position(1776, 2255, 7), 417, 9504)
+
+    -- [Ala Sudeste] Console Battle Frontier / Sandbox GM (ActionID 9505 -> openDemoModal)
+    placeDecorItem(Position(1775, 2266, 7), 9596, 1)
+    placeDecorItem(Position(1775, 2266, 7), 8635, 1)
+    placeDecorItem(Position(1776, 2266, 7), 32802, 1)
+    placeDecorItem(Position(1777, 2266, 7), 9596, 1)
+    placeDecorItem(Position(1777, 2266, 7), 8635, 1)
+    placeInteractivePad(Position(1776, 2264, 7), 417, 9505)
 
     -- ====================================================================
     -- 2. CONSTRÓI O BIOMA INICIAL DA ARENA (ANDAR 1)
@@ -1220,44 +1238,49 @@ function PokeDungeon.buildMap()
     PokeDungeon.buildFloorBiome(1)
 
     -- ====================================================================
-    -- 3. REPAGINADA DA CIDADE INICIAL (CENTRO POKÉMON DE SAFFRON & JARDIM DE KANTO)
+    -- 3. CENTRO POKÉMON DE SAFFRON (100% PRESERVADO / NÃO-DESTRUTIVO)
+    -- Nunca altera ID de piso nem remove itens ou espalha decorações
     -- ====================================================================
-    -- Sincroniza o templePos com a Town oficial caso necessário
     local saffronTown = Town("Saffron") or Town(34) or Town("Pallet") or Town(42)
     if saffronTown then
         PokeDungeon.config.templePos = saffronTown:getTemplePosition()
     end
 
     local tPos = PokeDungeon.config.templePos -- (1054, 1050, 7)
-    local cpPos = PokeDungeon.config.cpPortalPos -- (1052, 1050, 7)
+    local tTile = Tile(tPos)
+    local tGround = tTile and tTile:getGround()
+    if tGround then
+        tGround:setActionId(9506) -- Cura automática ao pisar no spawn original sem alterar piso
+    end
 
-    -- Tile Central de Chegada no Centro Pokémon: Estação de Cura Automática da Enfermeira Joy (ActionID 9506)
-    placeInteractivePad(tPos, 424, 9506)
+    -- Escolhe um tile livre próximo ao spawn para o Portal da Dungeon (ActionID 9500)
+    local candidates = {
+        Position(tPos.x - 2, tPos.y, tPos.z),
+        Position(tPos.x - 3, tPos.y, tPos.z),
+        Position(tPos.x + 2, tPos.y, tPos.z),
+        Position(tPos.x, tPos.y + 2, tPos.z)
+    }
+    local chosenCpPos = candidates[1]
+    for _, cPos in ipairs(candidates) do
+        if isCleanWalkableTile(cPos) then
+            chosenCpPos = cPos
+            break
+        end
+    end
+    PokeDungeon.config.cpPortalPos = chosenCpPos
 
-    -- Passarela Real Dourada ligando o Spawn (1054, 1050, 7) até o Portal da Dungeon (1052, 1050, 7)
-    setTileFloorAndClear(Position(tPos.x - 1, tPos.y, tPos.z), 3166)
-
-    -- Portal Dimensional da Dungeon dentro do Centro Pokémon (ActionID 9500)
-    setTileFloorAndClear(cpPos, 417)
-    placePortal(cpPos, 9500)
-
-    -- Embelezamento Seguro do Centro Pokémon e dos Jardins Externos da Cidade Inicial (Kanto Recomp)
-    -- Só adiciona flores em gramados externos livres para nunca bloquear portas, balcões ou NPCs
-    for dx = -12, 12 do
-        for dy = -12, 12 do
-            local checkPos = Position(tPos.x + dx, tPos.y + dy, tPos.z)
-            local tile = Tile(checkPos)
-            if tile and tile:getGround() and not tile:hasFlag(TILESTATE_BLOCKSOLID) and not tile:hasFlag(TILESTATE_FLOORCHANGE) then
-                local gId = tile:getGround():getId()
-                local itemCount = tile:getItems() and #tile:getItems() or 0
-                if itemCount == 0 and tile:getCreatureCount() == 0 then
-                    -- Se for grama externa de Saffron (4526..4541), cria canteiros floridos clássicos de Kanto
-                    if gId >= 4526 and gId <= 4541 and ((dx * 3 + dy * 5) % 11 == 0) then
-                        placeDecorItem(checkPos, 2744 + ((math.abs(dx) + math.abs(dy)) % 3), 1)
-                    end
-                end
+    local cpTile = Tile(chosenCpPos)
+    if cpTile and cpTile:getItems() then
+        for i = #cpTile:getItems(), 1, -1 do
+            local it = cpTile:getItems()[i]
+            if it and it:getId() == 1387 then
+                it:remove()
             end
         end
+    end
+    local cpPortal = Game.createItem(1387, 1, chosenCpPos)
+    if cpPortal then
+        cpPortal:setActionId(9500)
     end
 
     -- Inicia o pulso visual periódico nos portais e estações interativas
@@ -1267,7 +1290,7 @@ function PokeDungeon.buildMap()
     end
 
     PokeDungeon.mapInitialized = true
-    print(">> [Poketestes by Raph] Cidade Inicial (CP Saffron), Praca Pokemon (Lobby 21x21), Entrada da Dungeon e 6 Biomas construidos com sucesso!")
+    print(">> [Poketestes by Raph] CP Saffron preservado, Salao do Lobby (1760..1780) e 6 Biomas construidos com sucesso!")
 end
 
 function PokeDungeon.runPortalBeaconLoop()
@@ -1282,37 +1305,33 @@ function PokeDungeon.runPortalBeaconLoop()
         Game.sendAnimatedText(tPos, "CURA JOY", TEXTCOLOR_LIGHTGREEN)
     end
 
-    -- Portões Norte da Masmorra (Praça Pokémon)
-    local gateNorth1 = Position(1805, 2248, 7)
-    gateNorth1:sendMagicEffect(CONST_ME_MAGIC_GREEN)
-    Game.sendAnimatedText(gateNorth1, "MASMORRA!", TEXTCOLOR_LIGHTGREEN)
-
-    local gateNorth2 = Position(1805, 2252, 7)
-    gateNorth2:sendMagicEffect(CONST_ME_MAGIC_GREEN)
-    Game.sendAnimatedText(gateNorth2, "JOGAR!", TEXTCOLOR_LIGHTGREEN)
+    -- Portão Norte da Masmorra (Salão do Lobby)
+    local gateNorth = Position(1770, 2252, 7)
+    gateNorth:sendMagicEffect(CONST_ME_MAGIC_GREEN)
+    Game.sendAnimatedText(gateNorth, "MASMORRA!", TEXTCOLOR_LIGHTGREEN)
 
     -- Bancada do Prof. Carvalho (Noroeste)
-    local oakPad = Position(1800, 2251, 7)
+    local oakPad = Position(1764, 2255, 7)
     oakPad:sendMagicEffect(CONST_ME_FIREWORK_RED)
     Game.sendAnimatedText(oakPad, "STARTERS", TEXTCOLOR_ORANGE)
 
-    -- Tenda dos Irmãos Kecleon (Sudoeste)
-    local kecleonPad = Position(1800, 2258, 7)
+    -- Loja Kecleon (Sudoeste)
+    local kecleonPad = Position(1764, 2264, 7)
     kecleonPad:sendMagicEffect(CONST_ME_GIFT_WRAPS)
     Game.sendAnimatedText(kecleonPad, "KECLEON", TEXTCOLOR_YELLOW)
 
     -- Monumento da Liga Índigo / Hall da Fama (Nordeste)
-    local hallPad = Position(1810, 2251, 7)
+    local hallPad = Position(1776, 2255, 7)
     hallPad:sendMagicEffect(CONST_ME_FIREWORK_YELLOW)
     Game.sendAnimatedText(hallPad, "RANKING", TEXTCOLOR_YELLOW)
 
     -- Console Battle Frontier / Sandbox GM (Sudeste)
-    local gmPad = Position(1810, 2258, 7)
+    local gmPad = Position(1776, 2264, 7)
     gmPad:sendMagicEffect(CONST_ME_MAGIC_BLUE)
     Game.sendAnimatedText(gmPad, "SANDBOX", TEXTCOLOR_LIGHTBLUE)
 
     -- Portão Sul de Retorno a Saffron
-    local lobbySouth = Position(1805, 2258, 7)
+    local lobbySouth = Position(1770, 2268, 7)
     lobbySouth:sendMagicEffect(CONST_ME_TELEPORT)
     Game.sendAnimatedText(lobbySouth, "CP SAFFRON", TEXTCOLOR_WHITE)
 
